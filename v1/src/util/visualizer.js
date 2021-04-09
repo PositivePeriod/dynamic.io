@@ -12,8 +12,6 @@ export class Visualizer {
 
     draw() {
         this.clearWhole();
-        this.drawRect(25, 25, 40, 40);
-        this.drawRect(25, 80, 40, 40);
         this.drawObject.forEach(obj => obj.draw(this));
     }
 
@@ -54,16 +52,17 @@ export class Visualizer {
         }
     }
 
-    drawRect(cx, cy, w, h, color = '#000000', stroke = false) {
+    drawRect(x, y, w, h, color = '#000000', stroke = false, center = true) {
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 
-        var x = cx - w / 2;
-        var y = cy - h / 2;
+        var drawX = center ? x - w / 2 : x
+        var drawY = center ? y - h / 2 : y
+
         if (stroke) {
-            this.ctx.strokeRect(x, y, w, h);
+            this.ctx.strokeRect(drawX, drawY, w, h);
         } else {
-            this.ctx.fillRect(x, y, w, h);
+            this.ctx.fillRect(drawX, drawY, w, h);
         }
     }
 

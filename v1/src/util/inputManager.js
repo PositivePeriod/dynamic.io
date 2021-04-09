@@ -27,6 +27,27 @@ export class KeyboardManager {
     }
 }
 
+export class MouseHandler {
+    constructor() {
+        //
+    }
+
+    handler(e) {
+        console.log(e.type, e.screenX, e.screenY)
+        if (e.type == 'click') {
+            //
+        }
+    }
+
+    activate() {
+        window.addEventListener('click', this.handler.bind(this));
+    }
+
+    deactivate() {
+        window.removeEventListener('click', this.handler.bind(this));
+    }
+}
+
 
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code - key name
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key - key event

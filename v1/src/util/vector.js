@@ -1,9 +1,8 @@
 export class PolarVector {
-    
-    constructor(r = 0, theta = 0) {
+    constructor(r, theta) {
         this.rLimit = 1e-6;
-        this.r = r;
-        this.theta = theta;
+        this.r = r || 0;
+        this.theta = theta || 0;
         this.checkZero();
     }
 
@@ -52,10 +51,10 @@ export class PolarVector {
 }
 
 export class OrthogonalVector {
-    constructor(x = 0, y = 0) {
+    constructor(x, y) {
         this.rLimit = 1e-6;
-        this.x = x;
-        this.y = y;
+        this.x = x || 0;
+        this.y = y || 0;
         this.checkZero();
 
     }

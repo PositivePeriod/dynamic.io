@@ -10,6 +10,10 @@ export class Visualizer {
         this.drawObject.push(object);
     }
 
+    extend(objects) {
+        this.drawObject.push(...objects);
+    }
+
     draw() {
         this.clearWhole();
         this.drawObject.forEach(obj => obj.draw(this));

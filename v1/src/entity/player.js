@@ -1,19 +1,22 @@
 import { CircleObject } from "./gameObject.js";
 import { OrthogonalVector } from "../util/vector.js";
+import { Missile } from "./missile.js";
 
 export class Player extends CircleObject {
-    constructor(x, y, rad, keyboard) {
-        super(x,y,rad);
+    constructor(x, y, rad, keyboard, mouse) {
+        super(x, y, rad);
         this.mass = 100;
         this.friction = 0.5;
 
         // TODO force type; cause by oneself, other, neutral, attack(miss나면 force애초에 안 더하는 걸로)
         // Health & Restoration
-        this.health = 50;
+        this._health = 50;
         this.healthRestore = 1;
         this.maxHealth = 100;
 
-        this.shield = 0;
+        this.boost = 1; // healer boost, speed boost, color change effect, 단계별 적용 배그처럼
+
+        this._shield = 0;
         this.shieldRestore = 0;
         this.maxShield = 0;
 
@@ -35,6 +38,26 @@ export class Player extends CircleObject {
             'KeyD': { x: 1, y: 0 }
         }
         this.keyboard = keyboard;
+        this.keyboard.listen('KeyT', this.attackKey.bind(this));
+        this.mouse = mouse;
+        this.mouse.listen('mouseup', this.attack.bind(this));
+        this.color = '#000080';
+
+        this.popList = [];
+    }
+
+    attackKey() {
+        // console.log('AttackKey');
+        // console.log(this.color);
+    }
+
+    attack(downX, downY, upX, upY) {
+        var dx = upX - downX;
+        var dy = upY - downY;
+        var angle = new OrthogonalVector(dx, dy).toPolar().theta;
+        console.log(angle);
+        var missile = new Missile(this.pos.x, this.pos.y, 3, 5, angle, 1);
+        this.popList.push(missile); 
     }
 
     update(dt) {
@@ -54,17 +77,18 @@ export class Player extends CircleObject {
 
         // Check death
 
-        this.health = Math.min((this.health + this.healthRestore).toFixed(2), this.maxHealth);
-        this.shield = Math.min((this.shield + this.shieldRestore).toFixed(2), this.maxShield);
+        this.health += this.healthRestore;
+        this.shield += this.shieldRestore;
     }
 
     draw(visualizer) {
-        visualizer.drawCircle(this.pos.x, this.pos.y, this.rad, '#000080');
+        visualizer.drawCircle(this.pos.x, this.pos.y, this.rad, this.color);
 
         var left = this.pos.x - this.rad;
         var top = this.pos.y - this.rad;
         var width = 2 * this.rad
         var height = 10
+
         var margin = 10
         var healthRatio = (this.health / this.maxHealth) * width;
 
@@ -74,7 +98,28 @@ export class Player extends CircleObject {
         }
     }
 
-    die() {
+    set health(newH) {
+        this._health = newH;
+        if (this._health <= 0) {
+            this.die();
+        }
+        this._health = Math.max(0, Math.min(this._health.toFixed(2), this.maxHealth));
+    }
 
+    get health() {
+        return this._health;
+    }
+
+    set shield(newS) {
+        this._shield = newS;
+        this._shield = Math.max(0, Math.min(this._shield.toFixed(2), this.maxShield));
+    }
+
+    get shield() {
+        return this._shield;
+    }
+
+    die() {
+        this.color = '#000000';
     }
 }

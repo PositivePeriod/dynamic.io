@@ -1,6 +1,6 @@
 import { Visualizer } from "./util/visualizer.js";
 import { KeyboardManager, MouseManager } from "./util/inputManager.js";
-import { Player } from "./entity/player.js";
+import { PlayerObject } from "./entity/player.js";
 import { MapObject } from "./entity/mapObject.js";
 
 class Game {
@@ -19,7 +19,7 @@ class Game {
             new MapObject(300, 300, 100, 100, { healthChange: 5 }),
             new MapObject(500, 500, 100, 100, { healthChange: -5 })
         ];
-        this.playerList = [new Player(400, 400, 30, this.keyboard, this.mouse)];
+        this.playerList = [new PlayerObject(400, 400, 30, this.keyboard, this.mouse)];
         this.missileList = [];
 
         this.visualizer.extend(this.mapList);

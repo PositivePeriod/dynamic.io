@@ -54,7 +54,9 @@ export class MouseManager {
     handler(e) {
         const x = e.offsetX;
         const y = e.offsetY;
-        console.log(e.type, x, y);
+        if (e.type !== 'mousemove') {
+            console.log(e.type, x, y);
+        }
         switch (e.type) {
             case 'mousemove':
                 this.x = x;

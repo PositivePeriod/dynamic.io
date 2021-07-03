@@ -9,12 +9,12 @@ export class KeyboardManager {
     }
 
     handler(e) {
-        console.log(e.type, e.code);
+        // console.log(e.type, e.code);
         switch (e.type) {
             case 'keydown':
                 this.keyStatus[e.code] = true;
                 if (e.code in this.keyCallback) {
-                    console.log('listen', e.code)
+                    // console.log('listen', e.code)
                     this.keyCallback[e.code]();
                 }
                 break;
@@ -54,9 +54,7 @@ export class MouseManager {
     handler(e) {
         const x = e.offsetX;
         const y = e.offsetY;
-        if (e.type !== 'mousemove') {
-            console.log(e.type, x, y);
-        }
+        // console.log(e.type, x, y);
         switch (e.type) {
             case 'mousemove':
                 this.x = x;

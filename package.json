@@ -2,7 +2,7 @@
     "name": "dynamic.io",
     "version": "1.0.0",
     "description": "Web game",
-    "main": "v1/main.js",
+    "main": "dynamic/main.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },

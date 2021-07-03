@@ -1,26 +1,29 @@
+import { GameObject } from "../entity/gameObject.js";
+
 export class Visualizer {
-    constructor(object) {
-        this.objects = object;
+    constructor() {
         this.initCanvas();
         this.initResize();
     }
 
     draw() {
         this.clearWhole();
-        this.objects.forEach(obj => { obj.draw(this); });
+        GameObject.system.forEach(group => {
+            group.forEach(obj => { obj.draw(this); })
+        })
     }
 
     initCanvas() {
-        this.canvas = document.createElement('canvas');
+        this.canvas = document.createElement("canvas");
         document.body.appendChild(this.canvas);
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext("2d");
 
         // this.ctx.lineWidth = 1;
     }
 
     initResize() {
         this.pixelRatio = window.devicePixelRatio > 1 ? 2 : 1;
-        window.addEventListener('resize', this.resize.bind(this), false);
+        window.addEventListener("resize", this.resize.bind(this), false);
         this.resize();
     }
 
@@ -31,10 +34,10 @@ export class Visualizer {
         this.canvas.height = this.stageHeight * this.pixelRatio;
         this.ctx.scale(this.pixelRatio, this.pixelRatio);
 
-        this.draw(this.objects);
+        this.draw();
     }
 
-    drawCircle(cx, cy, r, color = '#000000', stroke = false) {
+    drawCircle(cx, cy, r, color = "#000000", stroke = false) {
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 
@@ -47,7 +50,7 @@ export class Visualizer {
         }
     }
 
-    drawRect(x, y, w, h, color = '#000000', stroke = false, center = true) {
+    drawRect(x, y, w, h, color = "#000000", stroke = false, center = true) {
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 

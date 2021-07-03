@@ -1,9 +1,15 @@
 export class PolarVector {
+    static rLimit = 1e-12;
+
     constructor(r, theta) {
-        this.rLimit = 1e-6;
         this.r = r || 0;
         this.theta = theta || 0;
+        this.checkRange();
         this.checkZero();
+    }
+
+    get r2() {
+        return this.r ** 2;
     }
 
     get x() {
@@ -14,8 +20,16 @@ export class PolarVector {
         return this.r * Math.sin(this.theta);
     }
 
+    checkRange() {
+        if (this.r < 0) {
+            this.r *= -1;
+            this.theta += Math.PI;
+        }
+        this.theta %= 2 * Math.PI
+    }
+
     checkZero() {
-        if (this.r < this.rLimit) {
+        if (this.r < PolarVector.rLimit) {
             this.r = 0
         }
     }
@@ -33,7 +47,8 @@ export class PolarVector {
     }
 
     rotateBy(angle) {
-        this.theta = (this.theta + angle) % (2 * Math.PI);
+        this.theta += angle;
+        this.checkRange();
     }
 
     multiply(scalar) {
@@ -45,22 +60,30 @@ export class PolarVector {
         this.checkZero();
     }
 
+    negaitve() {
+        return new PolarVector(-this.r, this.theta);
+    }
+
     normalize() {
-        this.r = this.r === 0 ? 0 : 1;
+        this.r = (this.r === 0) ? 0 : 1;
     }
 }
 
 export class OrthogonalVector {
+    static rLimit = 1e-12;
+
     constructor(x, y) {
-        this.rLimit = 1e-6;
         this.x = x || 0;
         this.y = y || 0;
         this.checkZero();
-
     }
 
     get r() {
         return (this.x ** 2 + this.y ** 2) ** 0.5;
+    }
+
+    get r2() {
+        return this.x ** 2 + this.y ** 2;
     }
 
     get theta() {
@@ -68,7 +91,7 @@ export class OrthogonalVector {
     }
 
     checkZero() {
-        if (Math.abs(this.r) < this.rLimit) {
+        if (Math.abs(this.r) < OrthogonalVector.rLimit) {
             this.x = 0;
             this.y = 0;
         }
@@ -90,7 +113,20 @@ export class OrthogonalVector {
         this.x += other.x;
         this.y += other.y;
         this.checkZero();
+    }
 
+    minus(other) {
+        return new OrthogonalVector(this.x - other.x, this.y - other.y);
+    }
+
+    minusBy(other) {
+        this.x -= other.x;
+        this.y -= other.y;
+        this.checkZero();
+    }
+
+    negative() {
+        return new OrthogonalVector(-this.x, -this.y);
     }
 
     multiply(scalar) {

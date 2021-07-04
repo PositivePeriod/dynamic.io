@@ -6,10 +6,30 @@ export class Visualizer {
         this.initResize();
     }
 
+    drawObject(obj) {
+        if (typeof obj.draw === "function") {
+            obj.draw(this);
+        } else {
+            switch (obj.shape) {
+                case "Rect":
+                    this.drawRect(obj.pos.x, obj.pos.y, obj.width, obj.height, obj.color);
+                    break;
+                case "Circle":
+                    this.drawCircle(obj.pos.x, obj.pos.y, obj.rad, obj.color);
+                    break;
+                case "Donut":
+                    this.drawDonut(obj.pos.x, obj.pos.y, obj.innerR, obj.outerR, obj.color);
+                    break;
+                default:
+                    console.error("Impossible object shape; ", obj.shape, obj);
+            }
+        }
+    }
+
     draw() {
         this.clearWhole();
-        GameObject.system.forEach(group => {
-            group.forEach(obj => { obj.draw(this); })
+        GameObject.system.objects.forEach(group => {
+            group.forEach(obj => { this.drawObject(obj); })
         })
     }
 
@@ -37,15 +57,36 @@ export class Visualizer {
         this.draw();
     }
 
-    drawCircle(cx, cy, r, color = "#000000", stroke = false) {
+    drawCircle(x, y, r, color = "#000000", stroke = false) {
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 
         this.ctx.beginPath();
-        this.ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+        this.ctx.arc(x, y, r, 0, 2 * Math.PI);
         if (stroke) {
             this.ctx.stroke();
         } else {
+            this.ctx.fill();
+        }
+    }
+
+    drawDonut(x, y, innerR, outerR, color = "#000000", stroke = false) {
+        // https://en.wikipedia.org/wiki/Nonzero-rule
+        
+        this.ctx.fillStyle = color;
+        this.ctx.strokeStyle = color;
+
+        if (stroke) {
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, outerR, 0, 2 * Math.PI);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, innerR, 0, 2 * Math.PI);
+            this.ctx.stroke();
+        } else {
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, outerR, 0, 2 * Math.PI, false);
+            this.ctx.arc(x, y, innerR, 0, 2 * Math.PI, true);
             this.ctx.fill();
         }
     }

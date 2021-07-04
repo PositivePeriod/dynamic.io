@@ -1,3 +1,6 @@
+// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code - key name
+// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key - key event
+
 export class KeyboardManager {
     constructor() {
         this.keyStatus = {};
@@ -101,6 +104,3 @@ export class MouseManager {
         window.removeEventListener('mouseup', this.handler.bind(this));
     }
 }
-
-// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code - key name
-// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key - key event

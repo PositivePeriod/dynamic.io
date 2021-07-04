@@ -1,65 +1,55 @@
-import { GameObject, CircleObject } from "./gameObject.js";
+import { GameObject } from "./gameObject.js";
 import { OrthogonalVector, PolarVector } from "../util/vector.js";
 import { ProjectileObject } from "./projectileObject.js";
 
-export class PlayerObject extends CircleObject {
-    constructor(x, y, rad, keyboard, mouse) {
-        super("PlayerObject", x, y, rad);
+export class PlayerObject extends GameObject {
+    constructor(x, y, keyboard, mouse) {
+        super(x, y);
+        this.type.push("PlayerObject");
+        this.makeShape("Circle", { "rad": 30 });
 
+        this.color = "#888888";
+
+        // Kinematics
         this.mass = 1;
         this.friction = 1e-2;
+        this.movingForceMag = 1000;
 
-        // TODO force type; cause by oneself, other, neutral, attack(miss나면 force애초에 안 더하는 걸로)
-        // Health & Restoration
-        this._health = 500;
-        this.healthRestore = 5;
-        this.maxHealth = 1000;
+        // Resource Restoration
+        this.alive = true;
+        this._health = { "amount": 500, "restore": 5, "max": 1000 };
+        this._shield = { "amount": 0, "restore": 5, "max": 100 };
+        this._mana = { "amount": 50, "restore": 5, "max": 100 };
 
-        this._shield = 50;
-        this.shieldRestore = 5;
-        this.maxShield = 100;
-
+        // Attack & Skill
+        this.skill = {
+            "shoot": { "cost": 10 },
+            "teleport": { "cost": 40, "range": 150 },
+        }
         this.boost = 1; // healer boost, speed boost, color change effect, 단계별 적용 배그처럼
-
-        this.resistance = 0;
-        // Moving & Attack Speed
-        this.range = 0; // attack range
-        this.forceMag = 1000;
-        // Resource cost & restoration
-        this.mana = 0; // 스킬 쓰면 소모되고 시간지나면 회복
         this.rage = 0; // 특수 공격, 궁
-        // Random & Critical, penetration
-        this.fortune = 0;
+        this.range = 0; // attack range
+        this.fortune = 0; // Random & Critical, penetration
         this.penetration = 0; // resistance 무시 가능성
-        // Other
+
+        // External Input
         this.dir = {
             "KeyW": { x: 0, y: -1 },
             "KeyA": { x: -1, y: 0 },
             "KeyS": { x: 0, y: 1 },
             "KeyD": { x: 1, y: 0 }
         }
+
         this.keyboard = keyboard;
-        this.keyboard.listen("KeyT", this.attackKey.bind(this));
+        this.keyboard.listen("KeyQ", this.shoot.bind(this));
+        this.keyboard.listen("KeyE", this.teleport.bind(this));
+        this.keyboard.activate();
+
         this.mouse = mouse;
-        this.mouse.listen("mouseup", this.attack.bind(this));
-        this.color = "#000080";
+        this.mouse.activate();
     }
 
-    attackKey() {
-        // console.log("AttackKey");
-        // console.log(this.color);
-    }
-
-    attack(downX, downY, upX, upY) {
-        var dx = upX - downX;
-        var dy = upY - downY;
-        var angle =  new OrthogonalVector(dx, dy).theta;
-        var rad = 5
-        var pos = this.pos.add(new PolarVector(this.rad + rad, angle));
-        new ProjectileObject(pos.x, pos.y, rad, 400, angle, { rad: 100, damage: 200, power: 10000 });
-    }
-
-    update(dt) {
+    move() {
         var direction = new OrthogonalVector();
         for (const [keyName, value] of Object.entries(this.dir)) {
             if (this.keyboard.isPressed(keyName)) {
@@ -67,14 +57,60 @@ export class PlayerObject extends CircleObject {
             }
         }
         if (direction.r !== 0) {
-            this.applyForce( new PolarVector(this.forceMag, direction.theta));
+            this.applyForce(new PolarVector(this.movingForceMag, direction.theta));
         }
+    }
+
+    shoot() {
+        if (this.mana >= this.skill.shoot.cost) {
+            this.mana -= this.skill.shoot.cost;
+            // TODO scheduling이 안 되어 있어서 object 만들면서 app.js 오류 가능성?!
+            var dx = this.mouse.x - this.pos.x;
+            var dy = this.mouse.y - this.pos.y;
+            var rad = 10;
+            var speed = 400;
+            var angle = new OrthogonalVector(dx, dy).theta;
+            var velocity = new PolarVector(speed, angle);
+            var pos = this.pos.add(new PolarVector(this.rad + rad, angle));
+            var bullet = new ProjectileObject(pos.x, pos.y, velocity, { "rad": 10, "range": 300, "damage": 300, "power": 500000 });
+            GameObject.system.add(bullet);
+        }
+    }
+
+    teleport() {
+        // TODO scheduling이 안 되어 있어서 collide 체크 이후 오류 가능성?!
+        if (this.mana >= this.skill.teleport.cost) {
+            var dx = this.mouse.x - this.pos.x;
+            var dy = this.mouse.y - this.pos.y;
+            var angle = new OrthogonalVector(dx, dy).theta;
+            var pos = this.pos.add(new PolarVector(this.skill.teleport.range, angle));
+
+            var pseudoObj = new GameObject();
+            pseudoObj.makeShape("Circle", { "x": pos.x, "y": pos.y, "rad": this.rad });
+            var isNotCollided = true;
+            var maps = GameObject.system.find("MapObject")
+            for (let i = 0; i < maps.length; i++) {
+                if (!maps[i].passable && pseudoObj.isCollidedWith(maps[i])) {
+                    isNotCollided = false;
+                    break;
+                }
+            }
+            console.log(isNotCollided, 'col');
+            if (isNotCollided) {
+                this.setPos(pos.x, pos.y);
+                this.mana -= this.skill.teleport.cost;
+            }
+        }
+    }
+
+    update(dt) {
+        this.move();
         super.update(dt);
 
         var collidedObj = [];
-        GameObject.system.get("MapObject").forEach(obj => {
-            if (!obj.passable && this.collideWith(obj)) {
-                obj.collide(dt, this);
+        GameObject.system.find("MapObject").forEach(obj => {
+            if (!obj.passable && this.isCollidedWith(obj)) {
+                obj.collide(this, dt);
                 collidedObj.push(obj);
             }
         });
@@ -82,62 +118,85 @@ export class PlayerObject extends CircleObject {
 
         this.velocity.multiplyBy(Math.pow(this.friction, dt));
 
-        // Check death
-
-        this.health += this.healthRestore * dt;
-        this.shield += this.shieldRestore * dt;
+        this.health += this._health.restore * dt;
+        this.shield += this._shield.restore * dt;
+        this.mana += this._mana.restore * dt;
     }
 
     draw(visualizer) {
+        // Body
         visualizer.drawCircle(this.pos.x, this.pos.y, this.rad, this.color, false);
 
-        var left = this.pos.x - this.rad;
-        var top = this.pos.y - this.rad;
-        var width = 2 * this.rad
-        var height = 10
+        // Resource bar
+        if (this.alive) {
+            var left = this.pos.x - this.rad;
+            var top = this.pos.y - this.rad;
+            var width = 2 * this.rad
+            var height = 10
+            var margin = 10
 
-        var margin = 10
-        var shieldRatio = (this.shield / this.maxShield) * width;
-        var healthRatio = (this.health / this.maxHealth) * width;
-        visualizer.drawRect(left + shieldRatio, top - 2 * margin - height - height, width - shieldRatio, height, "#888888", false, false);
-        if (shieldRatio > 0) {
-            visualizer.drawRect(left, top - 2 * margin - 2 * height, shieldRatio, height, "#0000FF", false, false);
-        }
-        visualizer.drawRect(left + healthRatio, top - margin - height, width - healthRatio, height, "#FF0000", false, false);
-        if (healthRatio > 0) {
-            visualizer.drawRect(left, top - margin - height, healthRatio, height, "#00FF00", false, false);
+            var manaRatio = (this.mana / this._mana.max) * width;
+            var shieldRatio = (this.shield / this._shield.max) * width;
+            var healthRatio = (this.health / this._health.max) * width;
+
+            // Mana
+            visualizer.drawRect(left + manaRatio, top - 3 * margin - 3 * height, width - manaRatio, height, "#000000", false, false);
+            if (manaRatio > 0) {
+                visualizer.drawRect(left, top - 3 * margin - 3 * height, manaRatio, height, "#FF00FF", false, false);
+            }
+            // Shield
+            visualizer.drawRect(left + shieldRatio, top - 2 * margin - 2 * height, width - shieldRatio, height, "#000000", false, false);
+            if (shieldRatio > 0) {
+                visualizer.drawRect(left, top - 2 * margin - 2 * height, shieldRatio, height, "#0000FF", false, false);
+            }
+            // Health
+            visualizer.drawRect(left + healthRatio, top - margin - height, width - healthRatio, height, "#FF0000", false, false);
+            if (healthRatio > 0) {
+                visualizer.drawRect(left, top - margin - height, healthRatio, height, "#00FF00", false, false);
+            }
         }
     }
 
     set health(newH) {
-        this._health = newH;
-        if (this._health <= 0) {
-            this.die();
+        if (this.alive) {
+            this._health.amount = newH;
+            if (this._health.amount <= 0) { this.die(); }
+            this._health.amount = Math.max(0, Math.min(this._health.amount.toFixed(2), this._health.max));
         }
-        this._health = Math.max(0, Math.min(this._health.toFixed(2), this.maxHealth));
     }
 
     get health() {
-        return this._health;
+        return this._health.amount;
     }
 
     set shield(newS) {
-        this._shield = newS;
-        if (this._shield < 0) {
-            this.health += this._shield;
+        if (this.alive) {
+            this._shield.amount = newS;
+            if (this._shield.amount < 0) { this.health += this._shield.amount; }
+            this._shield.amount = Math.max(0, Math.min(this._shield.amount.toFixed(2), this._shield.max));
         }
-        this._shield = Math.max(0, Math.min(this._shield.toFixed(2), this.maxShield));
     }
 
     get shield() {
-        return this._shield;
+        return this._shield.amount;
+    }
+
+    set mana(newM) {
+        if (this.alive) {
+            this._mana.amount = newM;
+            this._mana.amount = Math.max(0, Math.min(this._mana.amount.toFixed(2), this._mana.max));
+        }
+    }
+
+    get mana() {
+        return this._mana.amount;
     }
 
     die() {
+        this.alive = false;
         this.color = "#000000";
-        this._health = 0;
-        this._shield = 0;
-        this.healthRestore = 0;
-        this.shieldRestore = 0;
+        this._health = { "amount": 0, "restore": 0, "max": 1 };
+        this._shield = { "amount": 0, "restore": 0, "max": 1 };
+        this._mana = { "amount": 0, "restore": 0, "max": 1 };
     }
 }

@@ -1,11 +1,36 @@
-export class PolarVector {
+class Vector {
     static rLimit = 1e-12;
 
+    constructor() {}
+
+    inner(other) {
+        return this.x * other.x + this.y * other.y;
+    }
+
+    scalarProjectTo(other) {
+        return (this.x * other.x + this.y * other.y) / other.r;
+    }
+
+    vectorProjectTo(other) {
+        return other.multiply((this.x * other.x + this.y * other.y) / other.r2);
+    }
+
+    normal(CCW=true) {
+        return PolarVector(this.r, this.theta + Math.PI / 2 * (CCW ? 1 : -1))
+    }
+}
+
+export class PolarVector extends Vector {
     constructor(r, theta) {
+        super();
         this.r = r || 0;
         this.theta = theta || 0;
         this.checkRange();
         this.checkZero();
+    }
+
+    represent() {
+        return { "r": this.r, "theta": this.theta }
     }
 
     get r2() {
@@ -69,13 +94,16 @@ export class PolarVector {
     }
 }
 
-export class OrthogonalVector {
-    static rLimit = 1e-12;
-
+export class OrthogonalVector extends Vector {
     constructor(x, y) {
+        super();
         this.x = x || 0;
         this.y = y || 0;
         this.checkZero();
+    }
+
+    represent() {
+        return { "x": this.x, "y": this.y }
     }
 
     get r() {

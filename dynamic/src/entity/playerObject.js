@@ -7,7 +7,6 @@ export class PlayerObject extends GameObject {
         super(x, y);
         this.type.push("PlayerObject");
         this.makeShape("Circle", { "rad": 30 });
-
         this.color = "#888888";
 
         // Kinematics
@@ -33,7 +32,7 @@ export class PlayerObject extends GameObject {
         this.penetration = 0; // resistance 무시 가능성
 
         // External Input
-        this.dir = {
+        this.movingKey = {
             "KeyW": { x: 0, y: -1 },
             "KeyA": { x: -1, y: 0 },
             "KeyS": { x: 0, y: 1 },
@@ -51,7 +50,7 @@ export class PlayerObject extends GameObject {
 
     move() {
         var direction = new OrthogonalVector();
-        for (const [keyName, value] of Object.entries(this.dir)) {
+        for (const [keyName, value] of Object.entries(this.movingKey)) {
             if (this.keyboard.isPressed(keyName)) {
                 direction.addBy(new OrthogonalVector(value.x, value.y));
             }
@@ -72,7 +71,7 @@ export class PlayerObject extends GameObject {
             var angle = new OrthogonalVector(dx, dy).theta;
             var velocity = new PolarVector(speed, angle);
             var pos = this.pos.add(new PolarVector(this.rad + rad, angle));
-            var bullet = new ProjectileObject(pos.x, pos.y, velocity, { "rad": 10, "range": 300, "damage": 300, "power": 500000 });
+            var bullet = new ProjectileObject(pos.x, pos.y, velocity, { "rad": 10, "range": 200, "damage": 300, "power": 300000 });
             GameObject.system.add(bullet);
         }
     }

@@ -1,3 +1,4 @@
+import { SHAPE } from "../../util/constant.js";
 import { PolarVector } from "../../util/vector.js";
 import { MapObject } from "./mapObject.js";
 
@@ -11,13 +12,17 @@ export class BouncyBackground extends MapObject {
     }
 
     collide(other) {
+        // TODO 제일 깊숙이 들어간 점 기준으로 해야 하는 것이 맞지 않은가?
+        if (!SHAPE.has(this.shape)) {
+            console.error("Impossible object shape; ", this.shape);
+        }
         switch (this.shape) {
             case "Rect":
                 var pos = other.pos.minus(this.pos);
-                if (this.width > this.height ) {
+                if (this.width > this.height) {
                     var l = (this.width - this.height) / 2;
                     if (Math.abs(pos.x) <= l) {
-                        if (pos.y === 0 ) { break;}
+                        if (pos.y === 0) { break; }
                         var force = new PolarVector(this.bounce / Math.abs(pos.y), pos.y > 0 ? Math.PI / 2 : Math.PI * 3 / 2);
                     } else {
                         pos.addBy(new PolarVector(l, pos.x > 0 ? Math.PI : 0));
@@ -27,7 +32,7 @@ export class BouncyBackground extends MapObject {
                 } else {
                     var l = (this.height - this.width) / 2;
                     if (Math.abs(pos.y) <= l) {
-                        if (pos.x === 0 ) { break;}
+                        if (pos.x === 0) { break; }
                         var force = new PolarVector(this.bounce / Math.abs(pos.x), pos.x > 0 ? Math.PI : 0);
                     } else {
                         pos.addBy(new PolarVector(l, pos.y > 0 ? Math.PI * 3 / 2 : Math.PI / 2));
@@ -50,12 +55,13 @@ export class BouncyBackground extends MapObject {
                 var centerR = (this.innerR + this.outerR) / 2;
                 if (pos.r !== centerR) {
                     var mag = this.bounce / Math.abs(pos.r - centerR);
-                    var force = new PolarVector(Math.sign(pos.r - centerR)*mag, pos.theta);
+                    var force = new PolarVector(Math.sign(pos.r - centerR) * mag, pos.theta);
                     other.applyForce(force);
                 }
                 break;
-            default:
-                console.error("Impossible object shape; ", this.shape);
+            case "Tri":
+                // TODO
+                break;
         }
     }
 

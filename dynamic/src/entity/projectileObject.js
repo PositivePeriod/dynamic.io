@@ -25,7 +25,7 @@ export class ProjectileObject extends GameObject {
             var pos = player.pos.minus(this.pos);
             if (pos.r < this.explosion.range) {
                 player.shield -= this.explosion.damage * (1 - pos.r / this.explosion.range);
-                var force = new PolarVector(this.explosion.power / pos.r, pos.theta);
+                var force = new PolarVector(this.explosion.power / pos.r, pos.theta); // TODO 0에 수렴
                 player.applyForce(force);
             }
         })

@@ -1,11 +1,9 @@
+import { SHAPE } from "../util/constant.js";
+import { OrthogonalVector } from "../util/vector.js";
+
 export class ObjectSystem {
     constructor() {
         this.objects = new Map();
-        this.hierarchy = {
-            "GameObject": ["MapObject", "PlayerObject", "ProjectileObject"],
-            "MapObject": ["BouncyBackground", "RigidBackground", "Panel"],
-            "Panel": ["ShieldPanel", "WeakAttackPanel", "StrongAttackPanel"],
-        }
     }
 
     add(obj) {
@@ -53,29 +51,18 @@ export class ObjectSystem {
     // }
 
     static isCollided(obj1, obj2) {
-        var shapeCode = obj1.shape.slice(0, 1) + obj2.shape.slice(0, 1);
-        switch (shapeCode) {
-            case "RR":
-                return this.RectRect(obj1, obj2);
-            case "RC":
-                return this.RectCircle(obj1, obj2);
-            case "RD":
-                return this.RectDonut(obj1, obj2);
-            case "CR":
-                return this.RectCircle(obj2, obj1); // Inverse
-            case "CC":
-                return this.CircleCircle(obj1, obj2);
-            case "CD":
-                return this.CircleDonut(obj1, obj2);
-            case "DR":
-                return this.RectDonut(obj2, obj1); // Inverse
-            case "DC":
-                return this.CircleDonut(obj2, obj1); // Inverse
-            case "DD":
-                return this.DonutDonut(obj1, obj2);
-            default:
-                console.error("Impossible object shape; ", obj.shape, obj);
-                return null
+        if (SHAPE.has(obj1.shape) && SHAPE.has(obj2.shape))
+            if (SHAPE.get(obj1.shape).hierarchy <= SHAPE.get(obj2.shape).hierarchy) {
+                var functionName = obj1.shape + obj2.shape;
+                // console.log(functionName);
+                return this[functionName](obj1, obj2);
+            } else {
+                var functionName = obj2.shape + obj1.shape;
+                // console.log(functionName);
+                return this[functionName](obj2, obj1);
+            }
+        else {
+            console.error("Impossible object shape; ", obj1.shape, obj2.shape, obj1, obj2);
         }
     }
 
@@ -109,18 +96,11 @@ export class ObjectSystem {
             var r2 = x ** 2 + y ** 2;
             return r2 >= donut.innerR ** 2;
         } else if (pos.r2 > donut.outerR ** 2) {
-            var testX = donut.pos.x;
-            var testY = donut.pos.y;
-            var left = rect.pos.x - rect.width / 2;
-            var right = rect.pos.x + rect.width / 2;
-            var top = rect.pos.y - rect.height / 2;
-            var bottom = rect.pos.y + rect.height / 2;
-
-            if (donut.pos.x < left) { testX = left; } else if (donut.pos.x > right) { testX = right; }
-            if (donut.pos.y < top) { testY = top; } else if (donut.pos.y > bottom) { testY = bottom; }
-            var distance2 = (donut.pos.x - testX) ** 2 + (donut.pos.y - testY) ** 2;
-            return distance2 <= donut.outerR ** 2;
-        } else { return true }
+            var pseudoCircle = { "pos": donut.pos, "rad": donut.outerR }
+            return this.RectCircle(rect, pseudoCircle)
+        } else {
+            return true
+        }
     }
 
     static CircleCircle(circle1, circle2) {
@@ -149,5 +129,87 @@ export class ObjectSystem {
         } else {
             return true
         }
+    }
+    d
+
+    static RectTri(rect, tri) {
+        var pos = rect.pos.minus(tri.pos);
+        var width = (rect.width + tri.width) / 2;
+        var height = (rect.height + tri.height) / 2;
+        if (width < Math.abs(pos.x) || height < Math.abs(pos.y)) {
+            return false
+        }
+        var dir = new OrthogonalVector(tri.dir[0], tri.dir[1]).toPolar();
+        dir.rotateBy(Math.PI / 2);
+        var normal = new OrthogonalVector(dir.x * tri.width, dir.y * tri.height).toPolar();
+        normal.rotateBy(-Math.PI / 2);
+        var centerDistance = pos.scalarProjectTo(normal);
+        var rectDistance = new OrthogonalVector(tri.dir[0] * rect.width / 2, tri.dir[1] * rect.height / 2).scalarProjectTo(normal);
+        return rectDistance >= centerDistance
+    }
+
+    static CircleTri(circle, tri) {
+        if (!this.RectCircle(tri, circle)) {
+            return false
+        }
+        var pos = circle.pos.minus(tri.pos);
+        var dir = new OrthogonalVector(tri.dir[0], tri.dir[1]).toPolar();
+        dir.rotateBy(Math.PI / 2);
+        var normal = new OrthogonalVector(dir.x * tri.width, dir.y * tri.height).toPolar();
+        normal.rotateBy(-Math.PI / 2);
+        var centerDistance = pos.scalarProjectTo(normal);
+        return circle.rad >= centerDistance
+    }
+
+    static DonutTri(donut, tri) {
+        var pos = tri.pos.minus(donut.pos);
+        if (pos.r < donut.innerR) {
+            var existCollidedVertex = [
+                [-1, -1],
+                [-1, 1],
+                [1, -1]
+            ].some(sign => {
+                var dPos = new OrthogonalVector(sign[0] * tri.dir[0] * tri.width / 2, sign[1] * tri.dir[1] * tri.height / 2);
+                return pos.add(dPos).r >= donut.innerR;
+            });
+            return existCollidedVertex
+        } else if (pos.r > donut.outerR) {
+            var pseudoCircle = { "pos": donut.pos, "rad": donut.outerR };
+            return this.CircleTri(pseudoCircle, tri)
+        } else {
+            return true
+        }
+    }
+
+    static TriTri(tri1, tri2) {
+        if (!(this.RectTri(tri1, tri2) && this.RectTri(tri2, tri1))) {
+            return false
+        }
+        if (tri1.dir[0] + tri2.dir[0] === 0 && tri1.dir[1] + tri2.dir[1] === 0) {
+            var pos = tri2.pos.minus(tri1.pos);
+            var dir = new OrthogonalVector(tri1.dir[0], tri1.dir[1]).toPolar();
+            dir.rotateBy(Math.PI / 2);
+            var normal = new OrthogonalVector(dir.x * tri1.width, dir.y * tri1.height).toPolar();
+            normal.rotateBy(-Math.PI / 2);
+
+            var rectDistance1 = pos.add(new OrthogonalVector(tri2.dir[0] * tri2.width / 2, -tri2.dir[1] * tri2.height / 2)).scalarProjectTo(normal);
+            var rectDistance2 = pos.add(new OrthogonalVector(-tri2.dir[0] * tri2.width / 2, tri2.dir[1] * tri2.height / 2)).scalarProjectTo(normal);
+
+            if (0 >= rectDistance1 && 0 >= rectDistance2) {return true}
+            if (0 < rectDistance1 && 0 < rectDistance2) {return false}
+
+            var pos = tri1.pos.minus(tri2.pos);
+            var dir = new OrthogonalVector(tri2.dir[0], tri2.dir[1]).toPolar();
+            dir.rotateBy(Math.PI / 2);
+            var normal = new OrthogonalVector(dir.x * tri2.width, dir.y * tri2.height).toPolar();
+            normal.rotateBy(-Math.PI / 2);
+            var rectDistance3 = pos.add(new OrthogonalVector(tri1.dir[0] * tri1.width / 2, -tri1.dir[1] * tri1.height / 2)).scalarProjectTo(normal);
+            var rectDistance4 = pos.add(new OrthogonalVector(-tri1.dir[0] * tri1.width / 2, tri1.dir[1] * tri1.height / 2)).scalarProjectTo(normal);
+
+            return 0 >= rectDistance3 || 0 >= rectDistance4
+        } else {
+            return true
+        }
+
     }
 }

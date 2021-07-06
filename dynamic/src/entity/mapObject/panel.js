@@ -65,5 +65,5 @@ export class TeleportPanel extends Panel {
 
     affect(dt, player) {
         player.setPos(this.target.x, this.target.y);
-    }
+    } // TODO projectile object teleport
 }

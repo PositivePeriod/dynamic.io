@@ -1,3 +1,4 @@
+import { SHAPE } from "../util/constant.js";
 import { OrthogonalVector } from "../util/vector.js";
 import { ObjectSystem } from "./objectSystem.js";
 
@@ -36,22 +37,19 @@ export class GameObject {
     }
 
     makeShape(shape, option) {
-        switch (shape) {
-            case "Rect":
-                this.width = option.width || 1;
-                this.height = option.height || 1;
-                break;
-            case "Circle":
-                this.rad = option.rad || 1;
-                break;
-            case "Donut":
-                this.innerR = option.innerR || 1;
-                this.outerR = option.outerR || 2;
-                break;
-            default:
-                console.error("Impossible object shape; ", shape);
-                return;
+        if (!SHAPE.has(shape)) {
+            console.error("Impossible object shape; ", shape);
+            return this
         }
+        SHAPE.get(shape).property.forEach(prop => {
+            if (option[prop] === undefined) {
+                console.error("Not enough property in option; ", prop, option[prop], option);
+                return this
+            }
+        });
+        SHAPE.get(shape).property.forEach(prop => {
+            this[prop] = option[prop]
+        })
         this.shape = shape;
         if (option.x && option.y) {
             this.setPos(option.x, option.y);

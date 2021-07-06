@@ -1,4 +1,5 @@
 import { GameObject } from "../entity/gameObject.js";
+import { SHAPE } from "./constant.js";
 
 export class Visualizer {
     constructor() {
@@ -10,6 +11,9 @@ export class Visualizer {
         if (typeof obj.draw === "function") {
             obj.draw(this);
         } else {
+            if (!SHAPE.has(obj.shape)) {
+                console.error("Impossible object shape; ", obj.shape, obj);
+            }
             switch (obj.shape) {
                 case "Rect":
                     this.drawRect(obj.pos.x, obj.pos.y, obj.width, obj.height, obj.color);
@@ -20,8 +24,8 @@ export class Visualizer {
                 case "Donut":
                     this.drawDonut(obj.pos.x, obj.pos.y, obj.innerR, obj.outerR, obj.color);
                     break;
-                default:
-                    console.error("Impossible object shape; ", obj.shape, obj);
+                case "Tri":
+                    this.drawTri(obj.pos.x, obj.pos.y, obj.width, obj.height, obj.dir, obj.color);
             }
         }
     }
@@ -72,7 +76,7 @@ export class Visualizer {
 
     drawDonut(x, y, innerR, outerR, color = "#000000", stroke = false) {
         // https://en.wikipedia.org/wiki/Nonzero-rule
-        
+
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 
@@ -102,6 +106,23 @@ export class Visualizer {
             this.ctx.strokeRect(drawX, drawY, w, h);
         } else {
             this.ctx.fillRect(drawX, drawY, w, h);
+        }
+    }
+
+    drawTri(x, y, w, h, dir, color = "#000000", stroke = false, centerMass = false) {
+        this.ctx.fillStyle = color;
+        this.ctx.strokeStyle = color;
+
+        var rightVertex = [x - dir[0] * w / (centerMass ? 3 : 2), y - dir[1] * h / (centerMass ? 3 : 2)];
+        this.ctx.beginPath();
+        this.ctx.moveTo(rightVertex[0], rightVertex[1]);
+        this.ctx.lineTo(rightVertex[0] + dir[0] * w, rightVertex[1]);
+        this.ctx.lineTo(rightVertex[0], rightVertex[1] + dir[1] * h);
+
+        if (stroke) {
+            this.ctx.stroke();
+        } else {
+            this.ctx.fill();
         }
     }
 

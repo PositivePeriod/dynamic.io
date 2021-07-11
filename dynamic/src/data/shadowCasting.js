@@ -99,25 +99,19 @@ export class Game {
                 let endpoint = endpoints[i];
                 let openSegment = openSegments[0];
 
-
                 if (endpoint.beginSegment) {
-                    let index = 0
-                    let segment = openSegments[index];
-
-                    while (segment && segmentInFrontOf(endpoint.segment, segment, center)) {
-                        index += 1;
-                        segment = openSegments[index]
-                    }
+                    var segment = openSegments.find(segment => { return !segment || !segmentInFrontOf(endpoint.segment, segment, center) });
 
                     // push
                     if (!segment) {
                         openSegments.push(endpoint.segment);
                     } else {
+                        var index = openSegments.indexOf(segment);
                         openSegments.splice(index, 0, endpoint.segment);
                     }
                 } else {
                     // remove
-                    let index = openSegments.indexOf(endpoint.segment)
+                    var index = openSegments.indexOf(endpoint.segment)
                     if (index > -1) openSegments.splice(index, 1);
                 }
 
@@ -130,9 +124,8 @@ export class Game {
                 }
             }
         }
-        for (var i = 0; i < output.length; i += 1) {
-            let [p1, p2] = output[i];
-            this.visualizer.drawPolygon([center, p1, p2], "rgba(0, 0, 0, 0.5)");
-        }
+        output.forEach(points => {
+            this.visualizer.drawPolygon([center, points[0], points[1]], "rgba(0, 0, 0, 0.5)");
+        })
     }
 }

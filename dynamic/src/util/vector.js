@@ -45,7 +45,7 @@ export class Line {
     }
 
     lefterThan(point) {
-        // segment가 point보다 왼쪽
+        // segment exists lefter than poiint
         var l = this.p2.minus(this.p1);
         var d = point.toOrthogonal().minus(this.p1);
         return d.inner(l.normal()) > 0
@@ -53,8 +53,7 @@ export class Line {
 }
 
 export function getTrianglePoints(origin, angle1, angle2, segment) {
-    var rad = 1000;
-
+    var rad = 1e6; // Should be Infinity
     var p1 = origin.add(new PolarVector(1, angle1));
     var p2 = origin.add(new PolarVector(1, angle2));
     var p3 = segment ? segment.p1 : origin.add(new PolarVector(rad, angle1));

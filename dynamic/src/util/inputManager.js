@@ -14,14 +14,14 @@ export class KeyboardManager {
     handler(e) {
         // console.log(e.type, e.code);
         switch (e.type) {
-            case 'keydown':
+            case "keydown":
                 this.keyStatus[e.code] = true;
                 if (e.code in this.keyCallback) {
-                    // console.log('listen', e.code)
+                    // console.log("listen", e.code)
                     this.keyCallback[e.code]();
                 }
                 break;
-            case 'keyup':
+            case "keyup":
                 this.keyStatus[e.code] = false;
                 break;
             default:
@@ -34,13 +34,13 @@ export class KeyboardManager {
     }
 
     activate() {
-        window.addEventListener('keydown', this.handler.bind(this));
-        window.addEventListener('keyup', this.handler.bind(this));
+        window.addEventListener("keydown", this.handler.bind(this));
+        window.addEventListener("keyup", this.handler.bind(this));
     }
 
     deactivate() {
-        window.removeEventListener('keydown', this.handler.bind(this));
-        window.removeEventListener('keyup', this.handler.bind(this));
+        window.removeEventListener("keydown", this.handler.bind(this));
+        window.removeEventListener("keyup", this.handler.bind(this));
     }
 }
 
@@ -59,11 +59,11 @@ export class MouseManager {
         const y = e.offsetY;
         // console.log(e.type, x, y);
         switch (e.type) {
-            case 'mousemove':
+            case "mousemove":
                 this.x = x;
                 this.y = y;
                 break;
-            case 'mousedown':
+            case "mousedown":
                 this.downX = x;
                 this.downY = y;
                 this.isPressed = true;
@@ -71,7 +71,7 @@ export class MouseManager {
                     this.mouseCallback[e.type](this.downX, this.downY);
                 }
                 break;
-            case 'mouseup':
+            case "mouseup":
                 this.isPressed = false;
                 if (e.type in this.mouseCallback) {
                     this.mouseCallback[e.type](this.downX, this.downY, x, y);
@@ -79,9 +79,9 @@ export class MouseManager {
                     this.downY = null;
                 }
                 break;
-            case 'click':
+            case "click":
                 break;
-            case 'dbclick':
+            case "dbclick":
                 break;
             default:
                 break;
@@ -93,14 +93,14 @@ export class MouseManager {
     }
 
     activate() {
-        window.addEventListener('mousemove', this.handler.bind(this));
-        window.addEventListener('mousedown', this.handler.bind(this));
-        window.addEventListener('mouseup', this.handler.bind(this));
+        window.addEventListener("mousemove", this.handler.bind(this));
+        window.addEventListener("mousedown", this.handler.bind(this));
+        window.addEventListener("mouseup", this.handler.bind(this));
     }
 
     deactivate() {
-        window.addEventListener('mousemove', this.handler.bind(this));
-        window.removeEventListener('mousedown', this.handler.bind(this));
-        window.removeEventListener('mouseup', this.handler.bind(this));
+        window.addEventListener("mousemove", this.handler.bind(this));
+        window.removeEventListener("mousedown", this.handler.bind(this));
+        window.removeEventListener("mouseup", this.handler.bind(this));
     }
 }

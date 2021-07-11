@@ -62,6 +62,9 @@ export class BouncyBackground extends MapObject {
             case "Tri":
                 // TODO
                 break;
+            case "Hex":
+                // TODO
+                break;
         }
     }
 

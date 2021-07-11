@@ -47,12 +47,28 @@ export class GameObject {
                 return this
             }
         });
-        SHAPE.get(shape).property.forEach(prop => {
-            this[prop] = option[prop]
-        })
+
+        SHAPE.get(shape).property.forEach(prop => { this[prop] = option[prop] })
         this.shape = shape;
         if (option.x && option.y) {
             this.setPos(option.x, option.y);
+            if (shape === "Rect" && option.center === false) {
+                this.setPos(option.x + option.width / 2, this.y = option.y + option.height / 2);
+            }
+
+        }
+        if (shape === "Hex") {
+            Object.defineProperty(this, "pseudoObjects", {
+                get: function() {
+                    return [
+                        { "shape": "Tri", "pos": this.pos.add(new OrthogonalVector(this.rad * 3 / 4, this.rad * 3 ** 0.5 / 4)), "width": this.rad / 2, "height": this.rad * 3 ** 0.5 / 2, "dir": [1, 1] },
+                        { "shape": "Tri", "pos": this.pos.add(new OrthogonalVector(this.rad * 3 / 4, -this.rad * 3 ** 0.5 / 4)), "width": this.rad / 2, "height": this.rad * 3 ** 0.5 / 2, "dir": [1, -1] },
+                        { "shape": "Tri", "pos": this.pos.add(new OrthogonalVector(-this.rad * 3 / 4, this.rad * 3 ** 0.5 / 4)), "width": this.rad / 2, "height": this.rad * 3 ** 0.5 / 2, "dir": [-1, 1] },
+                        { "shape": "Tri", "pos": this.pos.add(new OrthogonalVector(-this.rad * 3 / 4, -this.rad * 3 ** 0.5 / 4)), "width": this.rad / 2, "height": this.rad * 3 ** 0.5 / 2, "dir": [-1, -1] },
+                        { "shape": "Rect", "pos": this.pos.copy(), "width": this.rad, "height": this.rad * 3 ** 0.5 },
+                    ]
+                }
+            });
         }
         return this
     }

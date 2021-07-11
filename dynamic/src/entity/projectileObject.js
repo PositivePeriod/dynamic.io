@@ -2,12 +2,12 @@ import { PolarVector } from "../util/vector.js";
 import { GameObject } from "./gameObject.js";
 
 export class ProjectileObject extends GameObject {
-    constructor(x, y, velocity, explosion) {
+    constructor(x, y, velocity, option) {
         super(x, y);
         this.type.push("ProjectileObject");
         this.velocity = velocity.toOrthogonal();
-        this.explosion = explosion || { range: 1, damage: 1, power: 1 };
-        this.makeShape("Circle", { "rad": this.explosion.rad });
+        this.option = option || { range: 1, damage: 1, force: 1 };
+        this.makeShape("Circle", { "rad": this.option.rad });
     }
 
     update(dt, others, visualizer) {
@@ -23,13 +23,13 @@ export class ProjectileObject extends GameObject {
     burst(visualizer) {
         GameObject.system.find("PlayerObject").forEach(player => {
             var pos = player.pos.minus(this.pos);
-            if (pos.r < this.explosion.range) {
-                player.shield -= this.explosion.damage * (1 - pos.r / this.explosion.range);
-                var force = new PolarVector(this.explosion.power / pos.r, pos.theta); // TODO 0에 수렴
+            if (pos.r < this.option.range) {
+                player.shield -= this.option.damage * (1 - pos.r / this.option.range);
+                var force = new PolarVector(this.option.force / pos.r, pos.theta); // TODO 0에 수렴
                 player.applyForce(force);
             }
         })
-        // visualizer.drawCircle(this.pos.x, this.pos.y, this.explosion.range, this.color);
+        // visualizer.drawCircle(this.pos.x, this.pos.y, this.option.range, this.color);
         GameObject.system.remove(this);
     }
 }

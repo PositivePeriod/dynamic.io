@@ -26,6 +26,10 @@ export class Visualizer {
                     break;
                 case "Tri":
                     this.drawTri(obj.pos.x, obj.pos.y, obj.width, obj.height, obj.dir, obj.color);
+                    break;
+                case "Hex":
+                    obj.pseudoObjects.forEach(object => { this.drawObject(object) });
+                    break;
             }
         }
     }
@@ -96,6 +100,8 @@ export class Visualizer {
     }
 
     drawRect(x, y, w, h, color = "#000000", stroke = false, center = true) {
+        // color = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255})`
+        this.ctx.alpha = 0.2;
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 
@@ -124,6 +130,23 @@ export class Visualizer {
         } else {
             this.ctx.fill();
         }
+    }
+
+    drawPolygon(points, color = "#000000", stroke = false) {
+        this.ctx.save();
+        this.ctx.fillStyle = color;
+        this.ctx.strokeStyle = color;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        points.forEach(p => { this.ctx.lineTo(p.x, p.y); });
+        this.ctx.closePath();
+        if (stroke) {
+            this.ctx.stroke();
+        } else {
+            this.ctx.fill();
+        }
+        this.ctx.restore();
     }
 
     clear(cx, cy, w, h) {

@@ -1,3 +1,88 @@
+export class Line {
+    constructor(p1, p2) {
+        this.p1 = p1.copy();
+        this.p2 = p2.copy();
+        this.p1.segment = this;
+        this.p2.segment = this;
+    }
+
+    setCenter(center) {
+        // p1 : start, p2 : end
+        var centeredP1 = this.p1.minus(center);
+        var centeredP2 = this.p2.minus(center);
+        this.p1.centeredTheta = centeredP1.theta;
+        this.p2.centeredTheta = centeredP2.theta;
+        var dAngle = this.p2.centeredTheta - this.p1.centeredTheta;
+        if (dAngle <= -Math.PI) { dAngle += 2 * Math.PI; }
+        if (dAngle > Math.PI) { dAngle -= 2 * Math.PI; }
+        this.p1.beginSegment = dAngle > 0;
+        this.p2.beginSegment = dAngle <= 0;
+    }
+
+    static linePointDistance(line, point) {
+        var l1 = line.p1.toOrthogonal();
+        var l2 = line.p2.toOrthogonal();
+        var p = point.toOrthogonal();
+        var l = l1.minus(l2);
+        var d = l1.minus(p);
+        return d.scalarProjectTo(l.normal())
+    }
+
+    static lineSegmentPointDistance(line, point) {
+        var l1 = line.p1.toOrthogonal();
+        var l2 = line.p2.toOrthogonal();
+        var p = point.toOrthogonal();
+        var l = l1.minus(l2);
+        var d = l1.minus(p);
+        return 0 <= d.scalarProjectTo(l) < l.r ? d.scalarProjectTo(l.normal()) : Math.min(l1.minus(p).r, l2.minus(p).r)
+    }
+
+    intesectAt(other) {
+        const s = ((other.p2.x - other.p1.x) * (this.p1.y - other.p1.y) - (other.p2.y - other.p1.y) * (this.p1.x - other.p1.x)) /
+            ((other.p2.y - other.p1.y) * (this.p2.x - this.p1.x) - (other.p2.x - other.p1.x) * (this.p2.y - this.p1.y));
+
+        return new OrthogonalVector(this.p1.x + s * (this.p2.x - this.p1.x), this.p1.y + s * (this.p2.y - this.p1.y));
+    }
+
+    lefterThan(point) {
+        // segment가 point보다 왼쪽
+        var l = this.p2.minus(this.p1);
+        var d = point.toOrthogonal().minus(this.p1);
+        return d.inner(l.normal()) > 0
+    }
+}
+
+export function getTrianglePoints(origin, angle1, angle2, segment) {
+    var rad = 1000;
+
+    var p1 = origin.add(new PolarVector(1, angle1));
+    var p2 = origin.add(new PolarVector(1, angle2));
+    var p3 = segment ? segment.p1 : origin.add(new PolarVector(rad, angle1));
+    var p4 = segment ? segment.p2 : origin.add(new PolarVector(rad, angle2));
+
+    var l1 = new Line(origin, p1);
+    var l2 = new Line(origin, p2);
+    var l = new Line(p3, p4);
+
+    return [l.intesectAt(l1), l.intesectAt(l2)]
+}
+
+export function segmentInFrontOf(s1, s2, relativePoint) {
+    const A1 = s1.lefterThan(Vector.interpolate(s2.p1, s2.p2, 0.01));
+    const A2 = s1.lefterThan(Vector.interpolate(s2.p2, s2.p1, 0.01));
+    const A3 = s1.lefterThan(relativePoint);
+
+    const B1 = s2.lefterThan(Vector.interpolate(s1.p1, s1.p2, 0.01));
+    const B2 = s2.lefterThan(Vector.interpolate(s1.p2, s1.p1, 0.01));
+    const B3 = s2.lefterThan(relativePoint);
+
+    if (B1 === B2 && B2 !== B3) return true;
+    if (A1 === A2 && A2 === A3) return true;
+    if (A1 === A2 && A2 !== A3) return false;
+    if (B1 === B2 && B2 === B3) return false;
+    return false;
+};
+
 class Vector {
     static rLimit = 1e-12;
 
@@ -15,8 +100,29 @@ class Vector {
         return other.multiply((this.x * other.x + this.y * other.y) / other.r2);
     }
 
-    normal(CCW=true) {
-        return PolarVector(this.r, this.theta + Math.PI / 2 * (CCW ? 1 : -1))
+    normal(CCW = true) {
+        if (CCW) {
+            return new OrthogonalVector(this.y, -this.x)
+        } else {
+            return new OrthogonalVector(-this.y, this.x)
+        }
+        // return new PolarVector(this.r, this.theta + Math.PI / 2 * (CCW ? 1 : -1)) // TODO inefficient
+    }
+
+    copy() {
+        if (this instanceof OrthogonalVector) {
+            return new OrthogonalVector(this.x, this.y)
+        } else {
+            return new PolarVector(this.r, this.theta)
+        }
+    }
+
+    same(other) {
+        return this.minus(other).r < Vector.rLimit
+    }
+
+    static interpolate(v1, v2, t) {
+        return new OrthogonalVector(v1.x * (1 - t) + v2.x * t, v1.y * (1 - t) + v2.y * t)
     }
 }
 
@@ -68,7 +174,7 @@ export class PolarVector extends Vector {
     }
 
     rotate(angle) {
-        return PolarVector(this.r, this.theta + angle);
+        return new PolarVector(this.r, this.theta + angle);
     }
 
     rotateBy(angle) {

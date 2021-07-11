@@ -24,6 +24,10 @@ Web game project inspired by acolytefight.io
 - [ ] Guided Projectile  
 - [x] Teleport  
 - [ ] Push or pull
+- [ ] boost Ex) healer boost, speed boost, color change effect, PUBG 아드레날린
+- [ ] rage about 특수 공격, 궁
+- [ ] fortune about Random & Critical, penetration
+- [ ] penetration - resistance 무시 가능성
 
 6. Vector
 - [ ] Use Number.NaN since the angle is not correct for zero vector

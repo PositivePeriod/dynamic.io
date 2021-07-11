@@ -21,9 +21,12 @@ export class MovableObject extends GameObject {
         }
 
         this.keyboard = keyboard;
-        this.keyboard.activate();
-
         this.mouse = mouse;
+        this.activate();
+    }
+
+    activate() {
+        this.keyboard.activate();
         this.mouse.activate();
     }
 

@@ -1,37 +1,30 @@
-# dynamic.io
-Web game project inspired by acolytefight.io
+# Dev Env
+- NodeJS
+- TypeScript
+- VSCode
+- ESLint
 
-## RoadMap
-1. Shape  
-- [x] DonutObject -> Donut MapObject
-- [x] Circular MapObject
-- [x] Strange Inheritance between objects - finally solved by v1.1
-- [ ] TriangularObject -> Polygon?!?!
+# JavaScript
+[Compatibility table](https://kangax.github.io/compat-table/)
 
-2. Separate data from logic  
-- [ ] hard coding options -> constant.json || option.json  
-- [ ] make format of mapData -> make simple maps
+[Mixin synthetic sugar](https://blog.seotory.com/post/2017/08/javascript-es6-use-class-and-mixin)
 
-3. Improvement of app.js && visualizer.js
-- [ ] Enable time delay animation
-- [ ] burst animation
-- [ ] poison damage
+# TypeScript
+Config : tsconfig.json
+[TS Docs](https://www.typescriptlang.org/docs/)  
+[TS Docs2](https://microsoft.github.io/PowerBI-JavaScript/index.html#read-this)
+[TS Config Reference](https://www.typescriptlang.org/tsconfig)  
+[tsc CLI Options](https://www.typescriptlang.org/docs/handbook/compiler-options.html)  
+[TS Compile in NodeJS](https://docs.microsoft.com/visualstudio/javascript/compile-typescript-code-npm)  
 
-4. Multiplayer
-- [ ] server setting using socket.io
+## Type
+[definite assignment assertion VS ambient declaration](https://stackoverflow.com/questions/67351411/what-s-the-difference-between-definite-assignment-assertion-and-ambient-declarat)
+[Function especially callback](https://stackoverflow.com/questions/29689966/how-to-define-type-for-a-function-callback-as-any-function-type-not-universal)
 
-5. Skills  
-- [ ] Guided Projectile  
-- [x] Teleport  
-- [ ] Push or pull
-- [ ] boost Ex) healer boost, speed boost, color change effect, PUBG 아드레날린
-- [ ] rage about 특수 공격, 궁
-- [ ] fortune about Random & Critical, penetration
-- [ ] penetration - resistance 무시 가능성
+## How to compile TS in VSCode
+1. Ctrl + Shift + B
+2. tsc --build
+3. npm run build
 
-6. Vector
-- [ ] Use Number.NaN since the angle is not correct for zero vector
-- [x] bouncyBg; might be infinity magnitude vector
-
-## License
-Totally Private :D
+# ESLint
+Config : .eslintrc.json
